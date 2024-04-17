@@ -8,9 +8,12 @@ class FileStorage:
     __file_path = 'file.json'
     __objects = {}
 
-    def all(self):
+    def all(self, cls=None):
         """Returns a dictionary of models currently in storage"""
-        return FileStorage.__objects
+        if cls is None:
+            return FileStorage.__objects
+        else:
+            return {key: obj for key, obj in FileStorage.__objects.items() if isinstance(obj, cls)}
 
     def new(self, obj):
         """Adds new object to storage dictionary"""
@@ -48,3 +51,56 @@ class FileStorage:
                         self.all()[key] = classes[val['__class__']](**val)
         except FileNotFoundError:
             pass
+
+    def delete(self, obj=None):
+        """Deletes obj from __objects if it exists"""
+        if obj is not None:
+            key = "{}.{}".format(obj.__class__.__name__, obj.id)
+            if key in self.__objects:
+                del self.__objects[key]
+
+# Sample usage:
+
+if __name__ == "__main__":
+    fs = FileStorage()
+
+    # All States
+    all_states = fs.all(State)
+    print("All States:", len(all_states))
+    for state in all_states.values():
+        print(state)
+
+    # Create a new State
+    new_state = State()
+    new_state.name = "California"
+    fs.new(new_state)
+    fs.save()
+    print("New State:", new_state)
+
+    # All States
+    all_states = fs.all(State)
+    print("All States:", len(all_states))
+    for state in all_states.values():
+        print(state)
+
+    # Create another State
+    another_state = State()
+    another_state.name = "Nevada"
+    fs.new(another_state)
+    fs.save()
+    print("Another State:", another_state)
+
+    # All States
+    all_states = fs.all(State)
+    print("All States:", len(all_states))
+    for state in all_states.values():
+        print(state)
+
+    # Delete the new State
+    fs.delete(new_state)
+
+    # All States
+    all_states = fs.all(State)
+    print("All States:", len(all_states))
+    for state in all_states.values():
+        print(state)
